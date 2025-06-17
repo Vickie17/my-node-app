@@ -170,5 +170,5 @@
 
 ---
 
-![SenseIQ Screenshot](/img/senseIQ.PNG)
+![SenseIQ Screenshot](/img/senseiq.PNG)
 
