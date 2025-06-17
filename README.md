@@ -1,171 +1,157 @@
-
-# ✅ Node.js Server Setup & Deployment Guide (with NGINX)
-
-## 📌 1️⃣ Provision the Server
-
-1. **Create an EC2 Instance (or VPS)**  
-   - Use a Linux image (e.g., Ubuntu 22.04 LTS).
-   - Open ports:  
-     - **22** (SSH)  
-     - **80** (HTTP)  
+# Project Execution Steps
+## Setting up the Server
+1. **Created an AWS EC2 Instance** 
+   - Used Ubuntu
+   - Opened ports: 
+     - **22** (SSH) 
+     - **80** (HTTP) 
      - **443** (HTTPS)
-
-2. **Connect to your Server**
-   ```bash
-   ssh -i /path/to/your-key.pem ubuntu@your_server_ip
+2. **Connected to my Server**
    ```
-
+   ssh -i my-key.pem ubuntu@my_server_ip
+   ```
 ---
-
-## 📌 2️⃣ Update & Install Dependencies
-
-1. **Update Packages**
-   ```bash
+## Installed Dependencies
+1. **Updated Packages**
+   ```
    sudo apt update && sudo apt upgrade -y
    ```
-
-2. **Install Node.js & npm**
-   ```bash
+2. **Installed Node.js & npm**
+   ```
    sudo apt install nodejs npm -y
    ```
-   Or use Node Version Manager (recommended):
-   ```bash
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-   sudo apt-get install -y nodejs
-   ```
-
-3. **Install Git**
-   ```bash
+3. **Installed Git**
    sudo apt install git -y
    ```
-
 ---
-
-## 📌 3️⃣ Clone & Setup your Node.js App
-
-1. **Clone your repository**
-   ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+## Created my Node.js App
+1. **Set up my files and directories**
    ```
-
-2. **Install dependencies**
-   ```bash
+   mkdir my-node-app
+   cd my-node-app
+   nano server.js
+   mkdir public
+   nano index.html
+   nano style.css
+   ```
+2. **Installed dependencies**
+   ```
    npm install
    ```
-
-3. **Test your app**
-   ```bash
-   node app.js
+3. **Tested my app**
    ```
-
+   node server.js
+   ```
 ---
-
-## 📌 4️⃣ Run your Node App with a Process Manager
-
-1. **Install PM2**
-   ```bash
+## Used a Process Manager to run my App
+1. **Installed PM2**
+   ```
    sudo npm install -g pm2
    ```
-
-2. **Start your app**
-   ```bash
+2. **Started my app**
+   ```
    pm2 start app.js
    ```
-
-3. **Enable PM2 Startup Script**
-   ```bash
+3. **Enabled PM2 Startup Script**
+   ```
    pm2 startup
    pm2 save
    ```
-
 ---
-
-## 📌 5️⃣ Install & Configure NGINX
-
-1. **Install NGINX**
-   ```bash
+## Installed & Configured NGINX
+1. **Installed NGINX**
+   ```
    sudo apt install nginx -y
    ```
-
-2. **Start & Enable NGINX**
-   ```bash
+2. **Started & Enabled NGINX**
+   ```
    sudo systemctl start nginx
    sudo systemctl enable nginx
    ```
-
-3. **Configure a Reverse Proxy**
-   ```bash
+3. **Configured a Reverse Proxy**
+   ```
    sudo nano /etc/nginx/sites-available/blueridge.twilightparadox.com
    ```
-
-   Example config:
-   ```nginx
-   server {
-       listen 80;
-       server_name blueridge.twilightparadox.com www.blueridge.twilightparadox.com;
-
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
    ```
+   # HTTP access via public IP
+server {
+    listen 80;
+    server_name 18.134.146.129;
 
-4. **Enable the Config**
-   ```bash
+    location / {
+        proxy_pass http://localhost:3000;  # Assuming Node.js is running on port 3000
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    access_log /var/log/nginx/blueridge_ip_access.log;
+    error_log /var/log/nginx/blueridge_ip_error.log;
+}
+
+# HTTP access via domain (redirect to HTTPS)
+server {
+    listen 80;
+    server_name blueridge.twilightparadox.com;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS access via domain
+server {
+    listen 443 ssl;
+    server_name blueridge.twilightparadox.com;
+
+    ssl_certificate /etc/letsencrypt/live/blueridge.twilightparadox.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/blueridge.twilightparadox.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    access_log /var/log/nginx/blueridge_domain_access.log;
+    error_log /var/log/nginx/blueridge_domain_error.log;
+}
+   ```
+4. **Enabled the Config**
+   ```
    sudo ln -s /etc/nginx/sites-available/blueridge.twilightparadox.com /etc/nginx/sites-enabled/
    ```
-
-5. **Test the NGINX Config**
-   ```bash
+5. **Tested the NGINX Config**
+   ```
    sudo nginx -t
    ```
-
-6. **Restart NGINX**
-   ```bash
+6. **Restarted NGINX**
+   ```
    sudo systemctl restart nginx
    ```
-
 ---
-
-## 📌 6️⃣ Secure with HTTPS (Let’s Encrypt)
-
-1. **Install Certbot**
-   ```bash
+## Secure my App with HTTPS (Let’s Encrypt)
+1. **Installed Certbot**
+   ```
    sudo apt install certbot python3-certbot-nginx -y
    ```
-
-2. **Obtain & Install SSL**
-   ```bash
+2. **Obtained & Installed SSL**
+   ```
    sudo certbot --nginx -d blueridge.twilightparadox.com -d www.blueridge.twilightparadox.com
    ```
-
-3. **Verify Renewal**
-   ```bash
-   sudo certbot renew --dry-run
-   ```
-
+3. **Pushed to GitHub**
+```
+git init
+git status
+git commit -m "first commit"
+git remote add origin
+git push origin master
 ---
-
-## 🎉 Done!
-
-- Your Node.js app is running.
-- NGINX is serving it securely via HTTPS.
-- PM2 keeps it alive.
-
----
-
-## ✅ Common Commands
-
-| Purpose                | Command                                  |
-|------------------------|------------------------------------------|
-| Check NGINX status     | `sudo systemctl status nginx`            |
-| Restart NGINX          | `sudo systemctl restart nginx`           |
-| Restart your app with PM2 | `pm2 restart all`                    |
-| View app logs          | `pm2 logs`                               |
-| View PM2 process list  | `pm2 list`                               |
